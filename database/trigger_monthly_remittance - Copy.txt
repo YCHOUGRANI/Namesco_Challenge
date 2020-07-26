@@ -1,0 +1,76 @@
+DELIMITER $$
+CREATE TRIGGER after_revenues_insert
+AFTER INSERT
+ON revenues FOR EACH ROW
+BEGIN
+
+     DECLARE `done` BOOL DEFAULT FALSE;
+     DECLARE `employee_id` INT;
+     DECLARE `amount` decimal(8,2);
+     DECLARE `role_type_id` VARCHAR(50);
+
+     DECLARE `employee_roles_cursor` CURSOR FOR
+       SELECT e.employee_id,r.role_type_id role_type_id
+       FROM `employee_roles` e
+       INNER JOIN `roles` r ON r.id = e.role_id
+       WHERE `e.film_id` = NEW.`film_id`;
+
+    
+
+       DECLARE CONTINUE HANDLER FOR NOT FOUND SET `done` := TRUE;
+
+
+       OPEN `employee_cursor`;
+     
+       `read_loop`: LOOP
+         FETCH `employee_cursor` INTO `employee_id`, `role_type_id`;
+
+
+DECLARE `fixed_monthly` decimal(8,2);
+DECLARE `fixed_fee` decimal(8,2);
+DECLARE `monthly_fee` decimal(8,2);
+DECLARE `percentage_share` decimal(8,2);
+
+DECLARE `employee_contract_cursor` CURSOR FOR
+       SELECT c.employee_id,c.fixed_monthly fm,c.fixed_fee ff,c.monthly_fee mf,c.percentage_share ps
+       FROM `contracts` c
+       WHERE `c.film_id` = NEW.`film_id`
+       AND  c.employee_id = employee_id;
+
+
+OPEN `employee_contract_cursor`;
+
+`read_loop2`: LOOP
+         FETCH `employee_contract_cursor` INTO `employee_id`, `fixed_monthly`,`fixed_fee` ,`monthly_fee`,`percentage_share`;
+
+         IF role_type_id == 1 THEN
+             amount=
+         END IF;
+         IF role_type_id == 2 THEN
+
+         END IF;
+         IF role_type_id == 3 THEN
+
+         END IF;
+
+     
+ IF `done` THEN
+           CLOSE `employee_contract_cursor`;
+           LEAVE `read_loop2`;
+         END IF;
+
+         IF `done` THEN
+           CLOSE `employee_cursor`;
+           LEAVE `read_loop`;
+         END IF;
+     
+         INSERT INTO `payments`
+           (`id`, `value`)
+         VALUES
+           (`_id`, `_value`);
+       END LOOP;
+
+        INSERT INTO payments(amount,year,month,employee_id,film_id,payment_type_id,role_id)
+        VALUES(new.amount,new.year,new.month,new.employee_id,new.film_id,new.payment_type_id,new.role_id);
+END$$
+DELIMITER ;

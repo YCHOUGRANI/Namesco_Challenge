@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+  mariadb:
+    tty: true
+    image: "docker.io/bitnami/mariadb:10.1-debian-10"
+    container_name: mysql
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=film
+      - MARIADB_DATABASE=film
+      - MARIADB_PASSWORD=summer2020
+    ports:
+      - 3306:3306
+    volumes:
+      - ../database_namesco:/bitnami/mariadb/data
+    privileged: true # Privileged mode could be required to run this container under Windows
+
+  myapp:
+    tty: true
+    image: docker.io/bitnami/laravel:7-debian-10
+    container_name: laravel
+    environment:
+      - DB_HOST=mariadb
+      - DB_USERNAME=film
+      - DB_DATABASE=film
+      - DB_PASSWORD=summer2020
+    depends_on:
+      - mariadb
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app
+    privileged: true # Privileged mode could be required to run this container under Windows
+
+  phpmyadmin:
+    tty: true
+    image: "docker.io/bitnami/phpmyadmin:5-debian-10"
+    ports:
+      - "80:8080"
+      - "443:8443"
+    depends_on:
+      - mariadb

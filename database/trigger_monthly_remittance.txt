@@ -1,0 +1,64 @@
+monthly_spread_fixed_fee
+select 
+DATE_FORMAT(m1, '%b %Y'),DATE_FORMAT(m1, '%Y'),DATE_FORMAT(m1, '%m')
+from
+(
+select 
+('2013-01-23' - INTERVAL DAYOFMONTH('2013-01-23')-1 DAY) 
++INTERVAL m MONTH as m1
+from
+(
+select @rownum:=@rownum+1 as m from
+(select 1 union select 2 union select 3 union select 4) t1,
+(select 1 union select 2 union select 3 union select 4) t2,
+(select 1 union select 2 union select 3 union select 4) t3,
+(select 1 union select 2 union select 3 union select 4) t4,
+(select @rownum:=-1) t0
+) d1
+) d2 
+where m1<='2014-04-01'
+order by m1
+
+
+
+DELIMITER $$
+CREATE TRIGGER after_contract_details_insert
+AFTER INSERT
+ON revenues FOR EACH ROW
+BEGIN
+
+        DECLARE finished INTEGER DEFAULT 0;
+        DECLARE start_at DATE;
+        DECLARE finish_at DATE;
+        DECLARE amount decimal(8,2);
+        DECLARE role_type_id VARCHAR(50);
+
+      DECLARE film_cursor CURSOR FOR
+       SELECT DATE_FORMAT(f.start_at, "%Y %m %d"),DATE_FORMAT(f.finish_at, "%Y %m %d")
+       FROM films f
+       INNER JOIN contracts c ON f.id=c.film_id 
+       INNER JOIN contract_details cd ON cd.contract_id=c.id
+       WHERE c.id  = NEW.contract_id
+       Limit 1;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+       OPEN film_cursor;
+       read_loop: LOOP
+         FETCH film_cursor INTO start_at, finish_at;
+  
+        DECLARE month DATE;
+        DECLARE year DATE;
+
+        IF finished = 1 THEN 
+                LEAVE read_loop;
+         END IF;
+
+
+
+
+        INSERT INTO payments(amount,year,month,contract_detail_id)
+        VALUES(new.fixed_fee,2020,8,new.id);
+END LOOP  read_loop;
+CLOSE film_cursor;
+END$$
+DELIMITER ;
